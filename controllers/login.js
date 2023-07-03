@@ -28,3 +28,5 @@ loginRouter.post('/', async(req, res, next) => {
     next(error)
   }
 })
+
+module.exports = loginRouter
