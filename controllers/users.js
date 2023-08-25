@@ -38,22 +38,24 @@ usersRouter.get('/', async (req,res, next) => {
   }
 })
 
-usersRouter.patch('/:id', userExtractor, async (req, res, next) => {
+usersRouter.patch('/', userExtractor, async (req, res, next) => {
   const { username } = req.body
 
   if(!username){
     return res.status(401).json({ error: "no username provided" })
   }
 
+  if(!req.token){
+    return response.status(401).json({error: 'no token provided'})
+  }
+
   try{
     const decodedToken = jwt.verify(req.token, process.env.SECRET)
     
-    if(!(decodedToken.id && (decodedToken.id === req.params.id))){
-      return res.status(400).json({error: 'invalid token'})
-    }
+    const userId = decodedToken.id
 
     const patchedUser = await 
-      User.findByIdAndUpdate(req.params.id, { $set: { username } }, { new: true })
+      User.findByIdAndUpdate(userId, { $set: { username } }, { new: true })
     
     const tokenUser = {
       username: patchedUser.username,
