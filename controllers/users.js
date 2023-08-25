@@ -29,10 +29,16 @@ usersRouter.post('/', async (req, res, next) => {
 
 })
 
-usersRouter.get('/', async (req,res, next) => {
+usersRouter.get('/', async (req, res, next) => {
+  if(!req.token){
+    return response.status(401).json({error: 'no token provided'})
+  }
+
   try{
-    const users = await User.find({}).populate('tasks', { name: 1, duration: 1, date: 1 })
-    res.json(users)
+    const decodedToken = jwt.verify(req.token, process.env.SECRET)
+    const userId = decodedToken.id
+    const user = await User.findById(userId).populate('tasks', { name: 1, duration: 1, date: 1 })
+    res.json(user)
   }catch(error){
     next(error)
   }
