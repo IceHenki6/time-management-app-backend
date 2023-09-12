@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 
 usersRouter.post('/', async (req, res, next) => {
-  const { username, name, password } = req.body
+  const {email, username, password } = req.body
 
   if(!password || password.length < 8){
     return res.status(400).json({error: 'a password is required and it must be longer than 8 characters long'})
@@ -15,8 +15,8 @@ usersRouter.post('/', async (req, res, next) => {
   const passwordHash = await bcrypt.hash(password, saltRounds)
 
   const user = new User({
+    email,
     username, 
-    name,
     passwordHash
   })
 
@@ -31,7 +31,7 @@ usersRouter.post('/', async (req, res, next) => {
 
 usersRouter.get('/', async (req, res, next) => {
   if(!req.token){
-    return response.status(401).json({error: 'no token provided'})
+    return res.status(401).json({error: 'no token provided'})
   }
 
   try{
