@@ -76,4 +76,25 @@ usersRouter.patch('/', userExtractor, async (req, res, next) => {
   }
 })
 
+usersRouter.get('/sessions', userExtractor, async(req,res,next) => {
+  if(!req.token){
+    return response.status(401).json({error: 'no token provided'})
+  }
+  try{
+    const user = await User.findById(req.user.id).populate('tasks').exec()
+
+    const allSessions = []
+
+    for (const task of user.tasks){
+      const populatedTask = await task.populate('sessions')
+      allSessions.push(...populatedTask.sessions)
+    }
+
+    res.json(allSessions)
+  }catch(error){
+    console.log(error)
+    next(error)
+  }
+})
+
 module.exports = usersRouter

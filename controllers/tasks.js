@@ -98,6 +98,9 @@ tasksRouter.delete('/:id', userExtractor, async(request, response, next) => {
 })
 
 tasksRouter.put('/:id', userExtractor, async(request, response, next) => {
+  if(!request.token){
+    return response.status(401).json({error: 'no token provided'})
+  }
   const taskBody = request.body
 
   const task = {
@@ -123,5 +126,24 @@ tasksRouter.put('/:id', userExtractor, async(request, response, next) => {
   }
 })
 
+tasksRouter.get('/:taskId/sessions', async(request, response, next) => {
+  if(!request.token){
+    return response.status(401).json({error: 'no token provided'})
+  }
+  try{
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    if(!decodedToken.id){
+      return response.status(400).json({error: 'invalid token'})
+    }
+
+    const id = request.params.taskId
+    const task = await Task.findById(id).populate('sessions').exec()
+
+    response.json(task.sessions)
+  }catch(error){
+    console.log(error)
+    next(error)
+  }
+})
 
 module.exports = tasksRouter
