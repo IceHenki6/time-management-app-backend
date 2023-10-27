@@ -146,4 +146,27 @@ tasksRouter.get('/:taskId/sessions', async(request, response, next) => {
   }
 })
 
+tasksRouter.get('/:taskId/totalTime', async(request, response, next) => {
+  if(!request.token){
+    return response.status(401).json({error: 'no token provided'})
+  }
+  try{
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    if(!decodedToken.id){
+      return response.status(400).json({error: 'invalid token'})
+    }
+
+    const id = request.params.taskId
+    const task = await Task.findById(id).populate('sessions').exec()
+    const sessions = task.sessions
+
+    const totalTime = sessions.reduce((total, session) => {
+       return total + session.duration 
+    }, 0)
+    response.json(totalTime)
+  }catch(error){
+    next(error)
+  }
+})
+
 module.exports = tasksRouter

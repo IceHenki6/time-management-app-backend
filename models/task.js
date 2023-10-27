@@ -5,10 +5,6 @@ const taskSchema = new mongoose.Schema({
     type: String,
     required: [true, 'a task name must be provided']
   },
-  duration: {
-    type: Number,
-    required: [true, 'a task duration must be provided']
-  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
