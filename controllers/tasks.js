@@ -107,7 +107,8 @@ tasksRouter.put('/:id', userExtractor, async (request, response, next) => {
 
   const task = {
     name: taskBody.name,
-    completed: taskBody.completed
+    completed: taskBody.completed,
+    totalTime: taskBody.totalTime
   }
 
   // if(!task.name || !task.duration){

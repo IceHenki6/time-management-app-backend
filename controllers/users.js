@@ -3,6 +3,7 @@ const usersRouter = require('express').Router()
 const userExtractor = require('../utils/middleware').userExtractor
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
+const Task = require('../models/task')
 
 usersRouter.post('/', async (req, res, next) => {
   const {email, username, password } = req.body
@@ -81,14 +82,21 @@ usersRouter.get('/sessions', userExtractor, async(req,res,next) => {
     return response.status(401).json({error: 'no token provided'})
   }
   try{
-    const user = await User.findById(req.user.id).populate('tasks').exec()
-
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    //const user = await User.findById(req.user.id).populate('tasks').exec()
+    if (!decodedToken.id) {
+      return response.status(400).json({ error: 'invalid token' })
+    }
+    const user = req.user
+    const tasks = Task.find({ user: user.id })
     const allSessions = []
 
-    for (const task of user.tasks){
+    for (const task of tasks){
       const populatedTask = await task.populate('sessions')
       allSessions.push(...populatedTask.sessions)
     }
+
+    console.log(allSessions)
 
     res.json(allSessions)
   }catch(error){
