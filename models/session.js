@@ -9,6 +9,10 @@ const sessionSchema = new mongoose.Schema({
   task: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Task'
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, { timestamps: true })
 

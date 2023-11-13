@@ -82,21 +82,15 @@ usersRouter.get('/sessions', userExtractor, async(req,res,next) => {
     return response.status(401).json({error: 'no token provided'})
   }
   try{
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    //const user = await User.findById(req.user.id).populate('tasks').exec()
+    const decodedToken = jwt.verify(req.token, process.env.SECRET)
     if (!decodedToken.id) {
       return response.status(400).json({ error: 'invalid token' })
     }
     const user = req.user
-    const tasks = Task.find({ user: user.id })
-    const allSessions = []
 
-    for (const task of tasks){
-      const populatedTask = await task.populate('sessions')
-      allSessions.push(...populatedTask.sessions)
-    }
+    const userWithSessions = await User.findById(user.id).populate('sessions').exec()
 
-    console.log(allSessions)
+    const allSessions = userWithSessions.sessions
 
     res.json(allSessions)
   }catch(error){
