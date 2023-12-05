@@ -5,30 +5,32 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const Task = require('../models/task')
 
-usersRouter.post('/', async (req, res, next) => {
-  const { email, username, password } = req.body
 
-  if (!password || password.length < 8) {
-    return res.status(400).json({ error: 'a password is required and it must be longer than 8 characters long' })
-  }
+//find another use for this later
+// usersRouter.post('/', async (req, res, next) => {
+//   const { email, username, password } = req.body
 
-  const saltRounds = 10
-  const passwordHash = await bcrypt.hash(password, saltRounds)
+//   if (!password || password.length < 8) {
+//     return res.status(400).json({ error: 'a password is required and it must be longer than 8 characters long' })
+//   }
 
-  const user = new User({
-    email,
-    username,
-    passwordHash
-  })
+//   const saltRounds = 10
+//   const passwordHash = await bcrypt.hash(password, saltRounds)
 
-  try {
-    const savedUser = await user.save()
-    res.status(201).json(savedUser)
-  } catch (error) {
-    next(error)
-  }
+//   const user = new User({
+//     email,
+//     username,
+//     passwordHash
+//   })
 
-})
+//   try {
+//     const savedUser = await user.save()
+//     res.status(201).json(savedUser)
+//   } catch (error) {
+//     next(error)
+//   }
+
+// })
 
 usersRouter.get('/', async (req, res, next) => {
   try {

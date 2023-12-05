@@ -10,6 +10,8 @@ const sessionsRouter = require('./controllers/sessions')
 const cookieParser = require('cookie-parser')
 const middleware = require('./utils/middleware')
 const refreshTokenRouter = require('./controllers/refreshToken')
+const logoutRouter = require('./controllers/logout')
+const registerRouter = require('./controllers/register')
 
 mongoose.connect(config.MONGODB_URI)
 
@@ -17,7 +19,9 @@ app.use(cors({origin: 'http://localhost:3000', credentials:true}))
 app.use(express.json())
 app.use(cookieParser())
 
+app.use('/api/register', registerRouter)
 app.use('/api/login', loginRouter)
+app.use('/api/logout', logoutRouter)
 app.use('/api/refresh-token', refreshTokenRouter)
 app.use(middleware.verifyToken)
 
