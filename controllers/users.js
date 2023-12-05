@@ -31,12 +31,7 @@ usersRouter.post('/', async (req, res, next) => {
 })
 
 usersRouter.get('/', async (req, res, next) => {
-  if (!req.token) {
-    return res.status(401).json({ error: 'no token provided' })
-  }
-
   try {
-    const decodedToken = jwt.verify(req.token, process.env.SECRET)
     const userId = decodedToken.id
     const user = await User.findById(userId).populate('tasks', { name: 1, duration: 1, date: 1 })
     res.json(user)
@@ -57,9 +52,8 @@ usersRouter.patch('/updateUsername', userExtractor, async (req, res, next) => {
   }
 
   try {
-    const decodedToken = jwt.verify(req.token, process.env.SECRET)
 
-    const userId = decodedToken.id
+    const userId = req.user.id
 
     const patchedUser = await
       User.findByIdAndUpdate(userId, { $set: { username } }, { new: true })
@@ -69,9 +63,9 @@ usersRouter.patch('/updateUsername', userExtractor, async (req, res, next) => {
       id: patchedUser._id
     }
 
-    const token = jwt.sign(tokenUser, process.env.SECRET)
+    const token = jwt.sign(tokenUser, process.env.SECRET, {expiresIn: '1m'})
 
-    res.status(200).send({ token, username: patchedUser.username, name: patchedUser.name })
+    res.status(200).send({ token, username: patchedUser.username })
   } catch (error) {
     next(error)
   }
@@ -104,9 +98,9 @@ usersRouter.patch('/updatePassword', userExtractor, async (req, res, next) => {
       id: patchedUser._id
     }
 
-    const token = jwt.sign(tokenUser, process.env.SECRET)
+    const token = jwt.sign(tokenUser, process.env.SECRET, {expiresIn: '1m'})
 
-    res.status(200).send({ token, username: patchedUser.username, name: patchedUser.name })
+    res.status(200).send({ token, username: patchedUser.username })
   } catch (error) {
     next(error)
   }
@@ -114,14 +108,7 @@ usersRouter.patch('/updatePassword', userExtractor, async (req, res, next) => {
 })
 
 usersRouter.get('/sessions', userExtractor, async (req, res, next) => {
-  if (!req.token) {
-    return response.status(401).json({ error: 'no token provided' })
-  }
   try {
-    const decodedToken = jwt.verify(req.token, process.env.SECRET)
-    if (!decodedToken.id) {
-      return response.status(400).json({ error: 'invalid token' })
-    }
     const user = req.user
 
     const userWithSessions = await User.findById(user.id).populate('sessions').exec()

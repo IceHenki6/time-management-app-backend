@@ -5,16 +5,7 @@ const jwt = require('jsonwebtoken')
 const userExtractor = require('../utils/middleware').userExtractor
 
 tasksRouter.get('/', userExtractor, async (request, response, next) => {
-  if (!request.token) {
-    return response.status(401).json({ error: 'no token provided' })
-  }
-
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    if (!decodedToken.id) {
-      return response.status(400).json({ error: 'invalid token' })
-    }
-
     const user = request.user
     const tasks = await Task.find({ user: user.id })
     response.json(tasks)
@@ -25,18 +16,14 @@ tasksRouter.get('/', userExtractor, async (request, response, next) => {
 
 
 tasksRouter.get('/:id', async (request, response, next) => {
-  if (!request.token) {
-    return response.status(401).json({ error: 'no token provided' })
-  }
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
     const task = await Task.findById(request.params.id)
 
     if (!task) {
       response.status(404).end()
     }
 
-    if (!(decodedToken.id && (decodedToken.id === task.user.toString()))) {
+    if (!(request.decodedToken.id && (request.decodedToken.id === task.user.toString()))) {
       return response.status(400).json({ error: 'invalid token' })
     }
 
@@ -49,16 +36,7 @@ tasksRouter.get('/:id', async (request, response, next) => {
 tasksRouter.post('/', userExtractor, async (request, response, next) => {
   const task = new Task(request.body)
 
-  if (!request.token) {
-    return response.status(401).json({ error: 'no token provided' })
-  }
-
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    if (!decodedToken.id) {
-      return response.status(400).json({ error: 'invalid token' })
-    }
-
     const user = request.user
     task.user = user.id
 
@@ -73,18 +51,14 @@ tasksRouter.post('/', userExtractor, async (request, response, next) => {
 })
 
 tasksRouter.delete('/:id', userExtractor, async (request, response, next) => {
-  if (!request.token) {
-    return response.status(401).json({ error: 'no token provided' })
-  }
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
     const task = await Task.findById(request.params.id)
 
     if (!task) {
       return response.status(401).json({ error: 'invalid id' })
     }
 
-    if (!(decodedToken.id && (decodedToken.id === task.user.toString()))) {
+    if (!(request.decodedToken.id && (request.decodedToken.id === task.user.toString()))) {
       return response.status(400).json({ error: 'invalid token' })
     }
     await Task.findByIdAndRemove(request.params.id)
@@ -100,9 +74,7 @@ tasksRouter.delete('/:id', userExtractor, async (request, response, next) => {
 })
 
 tasksRouter.put('/:id', userExtractor, async (request, response, next) => {
-  if (!request.token) {
-    return response.status(401).json({ error: 'no token provided' })
-  }
+
   const taskBody = request.body
 
   const task = {
@@ -111,13 +83,10 @@ tasksRouter.put('/:id', userExtractor, async (request, response, next) => {
     totalTime: taskBody.totalTime
   }
 
-  // if(!task.name || !task.duration){
-  //   return response.status(401).json({ error:'name or task duration missing from the request' })
-  // }
+
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
     const taskToUpdate = await Task.findById(request.params.id)
-    if (!(decodedToken.id && (decodedToken.id === taskToUpdate.user.toString()))) {
+    if (!(request.decodedToken.id && (request.decodedToken.id === taskToUpdate.user.toString()))) {
       return response.status(400).json({ error: 'invalid token' })
     }
 
@@ -130,17 +99,13 @@ tasksRouter.put('/:id', userExtractor, async (request, response, next) => {
 })
 
 tasksRouter.get('/:taskId/sessions', async (request, response, next) => {
-  if (!request.token) {
-    return response.status(401).json({ error: 'no token provided' })
-  }
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    if (!decodedToken.id) {
-      return response.status(400).json({ error: 'invalid token' })
-    }
-
     const id = request.params.taskId
     const task = await Task.findById(id).populate('sessions').exec()
+
+    if (!(request.decodedToken.id && (request.decodedToken.id === task.user.toString()))) {
+      return response.status(400).json({ error: 'invalid token' })
+    }
 
     response.json(task.sessions)
   } catch (error) {
@@ -150,15 +115,7 @@ tasksRouter.get('/:taskId/sessions', async (request, response, next) => {
 })
 
 tasksRouter.get('/:taskId/totalTime', async (request, response, next) => {
-  if (!request.token) {
-    return response.status(401).json({ error: 'no token provided' })
-  }
   try {
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    if (!decodedToken.id) {
-      return response.status(400).json({ error: 'invalid token' })
-    }
-
     const id = request.params.taskId
     const task = await Task.findById(id).populate('sessions').exec()
     const sessions = task.sessions

@@ -21,7 +21,24 @@ loginRouter.post('/', async(req, res, next) => {
       id: user._id
     }
 
-    const token = jwt.sign(tokenUser, process.env.SECRET)
+    const token = jwt.sign(
+      tokenUser, 
+      process.env.TOKEN_SECRET,
+      { expiresIn: '1m' }
+    )
+
+    const refreshToken = jwt.sign(
+      tokenUser,
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: '15d'}
+    )
+
+    res.cookie('jwt', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None',
+      maxAge: 15 * 24 * 60 * 60 * 1000
+    })
     
     res.status(200).send({token, username: user.username})
   }catch(error){

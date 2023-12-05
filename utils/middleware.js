@@ -9,36 +9,42 @@ const unknownEndpoint = (req, res) => {
 const errorHandler = (error, req, res, next) => {
   logger.error(error.message)
 
-  if(error.name === 'CastError') {
-    return res.status(400).send({error: 'invalid id'})
-  }else if(error.name === 'ValidationError') {
-		return res.status(400).json({ error: error.message })
-	}else if(error.name === 'JsonWebTokenError'){
-		return res.status(400).json({ error: error.message })
-	}
+  if (error.name === 'CastError') {
+    return res.status(400).send({ error: 'invalid id' })
+  } else if (error.name === 'ValidationError') {
+    return res.status(400).json({ error: error.message })
+  } else if (error.name === 'JsonWebTokenError') {
+    return res.status(400).json({ error: error.message })
+  }
 
   next(error)
 }
 
-const tokenExtractor = (req, res, next) => {
+const verifyToken = (req, res, next) => {
   const authorization = req.get('authorization')
-  if(authorization && authorization.startsWith('Bearer ')){
-    req.token = authorization.replace('Bearer ', '')
-  }else{
-    req.token = null
+  if (authorization && authorization.startsWith('Bearer ')) {
+    const token = authorization.replace('Bearer ', '')
+    jwt.verify(
+      token,
+      process.env.TOKEN_SECRET,
+      (err, decoded) => {
+        if (err) return res.status(403).json({ message: 'forbidden' })
+        req.decodedToken = decoded
+        next()
+      }
+    )
+  } else {
+    return res.status(401).json({ message: 'unauthorized' })
   }
-  next()
+  // next()
 }
 
 const userExtractor = async (req, res, next) => {
-  try{
-    if(req.token){
-      const decodedToken = jwt.verify(req.token, process.env.SECRET)
-      const user = await User.findById(decodedToken.id)
-      user ? req.user = user : req.user = null
-    }
+  try {
+    const user = await User.findById(req.decodedToken.id)
+    user ? req.user = user : req.user = null
     next()
-  }catch(error){
+  } catch (error) {
     next(error)
   }
 }
@@ -46,6 +52,6 @@ const userExtractor = async (req, res, next) => {
 module.exports = {
   unknownEndpoint,
   errorHandler,
-  tokenExtractor,
+  verifyToken,
   userExtractor
 }
