@@ -32,9 +32,9 @@ const Task = require('../models/task')
 
 // })
 
-usersRouter.get('/', async (req, res, next) => {
+usersRouter.get('/', userExtractor, async (req, res, next) => {
   try {
-    const userId = decodedToken.id
+    const userId = req.user.id
     const user = await User.findById(userId).populate('tasks', { name: 1, duration: 1, date: 1 })
     res.json(user)
   } catch (error) {
